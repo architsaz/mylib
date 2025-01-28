@@ -636,6 +636,70 @@ int save_centri3(int nelem, int *elems, double *ptxyz, double **cen2)
 	*cen2 = cen;
 	return 0;
 }
+// calculate the center of tri3 edges 
+int save_cenedgetri3(int nelem,int *elems,double *ptxyz,double **cen2){
+	double *cen = (double *)malloc((size_t)nelem*9*sizeof(double));
+	for (int ele=0;ele<nelem;ele++){
+		// Coordinates of the three vertices of the triangle
+		int p1 = elems [3*ele] -1;
+		int p2 = elems [3*ele+1] -1;
+		int p3 = elems [3*ele+2] -1;
+		double cp1[3] = {ptxyz[3*p1], ptxyz[3*p1+1], ptxyz[3*p1+2]};
+		double cp2[3] = {ptxyz[3*p2], ptxyz[3*p2+1], ptxyz[3*p2+2]};
+		double cp3[3] = {ptxyz[3*p3], ptxyz[3*p3+1], ptxyz[3*p3+2]};
+		// calculate center of each edge
+		for (int i=0;i<3;i++)
+			cen [9*ele+i] = (cp1[i]+cp2[i])/2;
+		for (int i=0;i<3;i++)
+			cen [9*ele+3+i] = (cp2[i]+cp3[i])/2;
+		for (int i=0;i<3;i++)
+			cen [9*ele+6+i] = (cp3[i]+cp1[i])/2;			
+	}
+	*cen2=cen;
+	return 0;// success signal
+}
+// Function to calculate the edge normal
+void calculateEdgeNormal(double edge[3], double faceNormal[3], double edgeNormal[3]) {
+    crossProduct(edge, faceNormal, edgeNormal);
+    normalize(edgeNormal);
+}
+int save_normedge(int nelem, double *ptxyz, int *elems, double *normele, double **normedge2){
+	double *normedge = (double *) malloc((size_t)nelem*9*sizeof(double));
+	for (int ele =0;ele<nelem;ele++){
+		// Coordinates of the three vertices of the triangle
+		int p1 = elems [3*ele] -1;
+		int p2 = elems [3*ele+1] -1;
+		int p3 = elems [3*ele+2] -1;
+		double cp1[3] = {ptxyz[3*p1], ptxyz[3*p1+1], ptxyz[3*p1+2]};
+		double cp2[3] = {ptxyz[3*p2], ptxyz[3*p2+1], ptxyz[3*p2+2]};
+		double cp3[3] = {ptxyz[3*p3], ptxyz[3*p3+1], ptxyz[3*p3+2]};
+
+		// Compute edge vectors
+		double edge1[3] = {cp2[0] - cp1[0], cp2[1] - cp1[1], cp2[2] - cp1[2]}; // Edge p1 -> p2
+		double edge2[3] = {cp3[0] - cp2[0], cp3[1] - cp2[1], cp3[2] - cp2[2]}; // Edge p2 -> p3
+		double edge3[3] = {cp1[0] - cp3[0], cp1[1] - cp3[1], cp1[2] - cp3[2]}; // Edge p3 -> p1
+
+		// Compute face normal using two edges
+    	double faceNormal[3]={normele[3*ele], normele[3*ele+1], normele[3*ele+2]};
+    	
+
+		// Calculate edge normals
+		double edgeNormal1[3], edgeNormal2[3], edgeNormal3[3];
+		calculateEdgeNormal(edge1, faceNormal, edgeNormal1); // Normal for edge p1 -> p2
+		calculateEdgeNormal(edge2, faceNormal, edgeNormal2); // Normal for edge p2 -> p3
+		calculateEdgeNormal(edge3, faceNormal, edgeNormal3); // Normal for edge p3 -> p1
+
+		// save normal vector in normedge
+		for (int i=0;i<3;i++)
+		normedge[9*ele+i]=edgeNormal1[i];
+		for (int i=0;i<3;i++)
+		normedge[9*ele+3+i]=edgeNormal2[i];
+		for (int i=0;i<3;i++)
+		normedge[9*ele+6+i]=edgeNormal3[i];
+	}
+	*normedge2=normedge;
+	return 0;// success signal
+}
 // conver mesh from tri3 to other type of mesh
 void tri3_to_tri6(mesh *M1, mesh **M2)
 {
@@ -779,6 +843,7 @@ int ConverMesh(mesh *M1, mesh *M2, ConvertorFunc Func)
 	Func(M1, &M2);
 	return e;
 }
+// VTK functions 
 void SCA_int_VTK(FILE *fptr, char *name, int col, int num, void *field)
 {
 	int *int_field = (int *)field;

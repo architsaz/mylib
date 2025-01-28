@@ -50,7 +50,76 @@ void csr_matvec(CRSMatrix *A, double *x, double *y)
     }
 }
 // Function to perform Cholesky decomposition
-void choleskyDecomposition(CRSMatrix *A, CRSMatrix *L)
+void choleskyDecomposition(CRSMatrix *A, CRSMatrix *L) {
+    // Check for valid input
+    if (A == NULL || L == NULL || A->n <= 0) {
+        fprintf(stderr, "Invalid input matrices.\n");
+        exit(EXIT_FAILURE);
+    }
+    // Initialize L
+    L->n = A->n;
+    L->nnz = A->n*(A->n+1)/2;
+    L->col_index = (int *)calloc((size_t)L->nnz,sizeof(int));
+    L->values = (double *)calloc((size_t)L->nnz,sizeof(double));
+    L->row_ptr = (int *)calloc((size_t)(L->n+1),sizeof(int));
+    int nnz1=0;
+    for (int i = 0;i<L->n;i++) {
+        L->row_ptr [i]=nnz1;
+        for (int j = 0;j<=i;j++){
+            L->col_index [nnz1]=j;
+            nnz1++;
+        }
+    }
+    L->row_ptr [L->n]=nnz1;
+
+    for (int j = 0; j < A->n; j++) { // loop over the columns 
+        for (int i = j; i < A->n ; i++) { // loop over row
+            int n = -1;
+            for (int ii = A->row_ptr [i];ii<A->row_ptr [i+1];ii++){
+                if (A->col_index[ii]==j) {
+                n= ii-A->row_ptr [i];
+                break;
+                }
+            }
+            int max_nonzero_in_row = A->row_ptr [i+1] - A->row_ptr [i];
+        // for (int n = 0; n < max_nonzero_in_row ; n++) { // loop over columns
+        //     int j = A->col_index[A->row_ptr [i]+n]; // column index for each nonzero element
+            if (j > i) continue; // make sure picked element in the lower triangle half of Matrix
+            double sum = 0.0;
+
+            if (j == i) {  // Diagonal elements
+                for (int kk = 0; kk < max_nonzero_in_row; kk++)
+                {                   
+                    int k = A->col_index[A->row_ptr [i]+kk];
+                    if (k >= j) continue;
+                    double Lnjk = L->values [L->row_ptr [j]+k];
+                    sum += Lnjk * Lnjk;
+                }
+                double Anjj = (n!=-1) ? A->values [A->row_ptr[j]+n] : 0 ;
+                if (Anjj - sum <= 0) {
+                    fprintf(stderr,"Matrix is not positive definite (Ajj-sum <= 0).\n");
+                    exit(EXIT_FAILURE);
+                }
+                //double Lnjj = L->values [L->row_ptr[j]+j];
+                L->values [L->row_ptr[j]+j] = sqrt(Anjj - sum);
+
+            } else {  // Off-diagonal elements
+                for (int kk = 0; kk < max_nonzero_in_row; kk++){
+                    int k = A->col_index[A->row_ptr [i]+kk];
+                    if (k >= j) continue;    
+                    double Lnik = L->values [L->row_ptr [i]+k];
+                    double Lnjk = L->values [L->row_ptr [j]+k];            
+                    sum += Lnik * Lnjk;
+                }
+                double Lnjj = L->values [L->row_ptr[j]+j];
+                double Anij = (n!=-1) ? A->values [A->row_ptr[i]+n] : 0;
+                L->values [L->row_ptr[i]+j] = (Anij - sum) / Lnjj;
+            }
+        }
+    }
+}
+// Function to perform Cholesky decomposition with list data structure
+void choleskyDecompositionwithListDS(CRSMatrix *A, CRSMatrix *L)
 {
     // Check for valid input
     if (A == NULL || A->n <= 0)

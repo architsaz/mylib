@@ -3,6 +3,7 @@
     #include "CRSMat_types.h"
     void csr_matvec(CRSMatrix *A, double *x, double *y);
     void choleskyDecomposition(CRSMatrix *A, CRSMatrix *L);
+    void choleskyDecompositionwithListDS(CRSMatrix *A, CRSMatrix *L);
     void forward_substitution(CRSMatrix *L, double *b, double *y);
     void backward_substitution(CRSMatrix *L, double *y, double *x);
     int isPositiveDefiniteMinor(int k, double *values, int *columns, int *row_ptr);

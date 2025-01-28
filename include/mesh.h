@@ -24,4 +24,7 @@ void read_VTK_double(FILE *fptr, int col, int nr, void **field);
 void read_VTK_int(FILE *fptr, int col, int nr, void **field);
 int ReadVTK(char *dir, char *filenam, int step, FunctionWithArgs2 *prtfield, int countfield);
 int SaveVTK(char *dir, char *filenam, int step, mesh *M, elemVTK elemfunc, FunctionWithArgs elefuncs[], size_t nrelefield, FunctionWithArgs pntfuncs[], size_t nrpntfield);
+void calculateEdgeNormal(double edge[3], double faceNormal[3], double edgeNormal[3]);
+int save_normedge(int nelem, double *ptxyz, int *elems, double *normele, double **normedge2);
+int save_cenedgetri3(int nelem,int *elems,double *ptxyz,double **cen2);
 #endif
