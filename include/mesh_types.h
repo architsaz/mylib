@@ -25,15 +25,6 @@ typedef struct
     double *normele;
     int *eledomain;
     int *open; // adjacent elements to the open region (inlet/outlet)
-    // elemental and pointal mask
-    int *Melem;    // wall charectristics from .wall file
-    int *rpts;     // pointal value of regional mask     --> read labels_srf.zfem
-    int *relems;   // elemental value of regional mask --> approximate
-    double *t;     // thickness shell element
-    double *young; // Young modulus for each element [dyne/cm^2]
-    int *presmask; // mask of pressure applied for pre-stressed configuration
-    int *fixbmask; // mask of fixed element for boundary consition
-    int *BCmask;   // mask of Boundary Condition is getting its value from the BCmask.txt file.
 } mesh;
 
 // define pointer to fuc for mesh convert
